@@ -37,7 +37,7 @@ class PanTilt:
         if self.nowAnglePAN<minPANangle: self.nowAnglePAN=minPANangle
 
         if self.nowAnglePAN!=self.lastAnglePAN:
-            print("move PAN from " + str(self.lastAnglePAN) + " to " +str(self.nowAnglePAN))
+            #print("move PAN from " + str(self.lastAnglePAN) + " to " +str(self.nowAnglePAN))
             self.pwmPAN.ChangeDutyCycle(self.nowAnglePAN)  # turn towards 90 degree
             #self.pwmPAN.start(self.nowAnglePAN)  # turn towards 90 degree
             self.lastAnglePAN = self.nowAnglePAN
@@ -50,7 +50,7 @@ class PanTilt:
         if self.nowAngleTILT<minTILTangle: self.nowAngleTILT = minTILTangle
 
         if self.nowAngleTILT!=self.lastAngleTILT:
-            print("move TILT from " + str(self.lastAngleTILT) + " to " +str(self.nowAngleTILT))
+            #print("move TILT from " + str(self.lastAngleTILT) + " to " +str(self.nowAngleTILT))
             self.pwmTILT.ChangeDutyCycle(self.nowAngleTILT)  # turn towards 90 degree
             #self.pwmTILT.start(self.nowAngleTILT)
             self.lastAngleTILT = self.nowAngleTILT
@@ -63,7 +63,7 @@ class PanTilt:
         self.nowAnglePAN = angle
 
         if angle!=self.lastAnglePAN:
-            print("move PAN from " + str(self.lastAnglePAN) + " to " +str(angle))
+            #print("move PAN from " + str(self.lastAnglePAN) + " to " +str(angle))
             self.pwmPAN.ChangeDutyCycle(angle)  # turn towards 90 degree
             #self.pwmPAN.start(angle)
             self.lastAnglePAN = angle
@@ -76,7 +76,7 @@ class PanTilt:
         self.nowAngleTILT = angle
 
         if angle!=self.lastAngleTILT:
-            print("move TILT from " + str(self.lastAngleTILT) + " to " +str(angle))
+            #print("move TILT from " + str(self.lastAngleTILT) + " to " +str(angle))
             self.pwmTILT.ChangeDutyCycle(angle)  # turn towards 90 degree
             #self.pwmTILT.start(angle)
             self.lastAngleTILT = angle

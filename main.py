@@ -13,7 +13,7 @@ GPIO.setmode(GPIO.BOARD)
 
 imgsize_w = int(640*0.5)
 imgsize_h = int(480*0.5)
-moveDegree = 0.3
+moveDegree = 0.25
 
 
 # construct the argument parse and parse the arguments
@@ -56,12 +56,12 @@ def movePANTILT(diffX, diffY):
     adjustDegreeY = moveDegree
     lengthX1 = (imgsize_w/2) * 0.2
     lengthY1 = (imgsize_h/2) * 0.2
-    lengthX2 = (imgsize_w/2) * 0.4
-    lengthY2 = (imgsize_h/2) * 0.4
-    lengthX3 = (imgsize_w/2) * 0.6
-    lengthY3 = (imgsize_h/2) * 0.6
-    lengthX4 = (imgsize_w/2) * 0.8
-    lengthY4 = (imgsize_h/2) * 0.8
+    lengthX2 = (imgsize_w/2) * 0.6
+    lengthY2 = (imgsize_h/2) * 0.6
+    lengthX3 = (imgsize_w/2) * 0.8
+    lengthY3 = (imgsize_h/2) * 0.8
+    lengthX4 = (imgsize_w/2) * 0.9
+    lengthY4 = (imgsize_h/2) * 0.9
 
 
     if abs(diffX)<lengthX1: adjustDegreeX = moveDegree/2
@@ -78,13 +78,17 @@ def movePANTILT(diffX, diffY):
 
     if diffX<0:
         motorPT.movePAN(-adjustDegreeX)
+        print("Move X --> " + str(-adjustDegreeX))
     else:
         motorPT.movePAN(adjustDegreeX)
+        print("Move X --> " + str(-adjustDegreeX))
 
     if diffY<0:
         motorPT.moveTILT(adjustDegreeY)
+        print("Move Y --> " + str(adjustDegreeY))
     else:
         motorPT.moveTILT(-adjustDegreeY)
+        print("Move Y --> " + str(-adjustDegreeY))
 
 
 
@@ -123,7 +127,7 @@ while True:
 
 
 	# show the frame
-	cv2.imshow("Frame", frame)
+	#cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 
         if(len(faces)>0):
@@ -131,7 +135,7 @@ while True:
             xFace = faces[0][0]
             yFace = faces[0][1]
 
-            print "x,y = " + str(xFace) + "," + str(yFace)
+            #print "x,y = " + str(xFace) + "," + str(yFace)
             diffX = (imgsize_w/2) - x
             diffY = (imgsize_h/2) - y
             print "diffX, diffY = " + str(diffX) + "," + str(diffY)
