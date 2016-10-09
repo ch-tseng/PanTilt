@@ -19,6 +19,7 @@ class PanTilt:
         self.initAngleTILT = initAngleTilt
         self.nowAngleTILT = initAngleTilt
         self.lastAngleTILT = 0
+        self.inaction = 0
 
         GPIO.setup(pinPAN, GPIO.OUT)
         self.pwmPAN = GPIO.PWM(pinPAN, 50)
@@ -27,9 +28,6 @@ class PanTilt:
         GPIO.setup(pinTILT, GPIO.OUT)
         self.pwmTILT = GPIO.PWM(pinTILT, 50)
         self.pwmTILT.start(initAngleTilt)
-
-        #self.pwmTILT.stop(initAngleTilt)
-        #self.pwmPAN.stop(initAnglePAN)
 
     def movePAN(self, angle=0.5):
         self.nowAnglePAN = self.nowAnglePAN + angle
@@ -82,6 +80,15 @@ class PanTilt:
             self.lastAngleTILT = angle
 
             #self.pwmTILT.stop(angle)
+
+    def stop(self):
+        self.stopTILT()
+        self.stopPAN()
+
+    def start(self):
+        self.startPAN()
+        self.startTILT()
+
     def stopPAN(self):
             self.pwmPAN.stop()
 
@@ -89,12 +96,9 @@ class PanTilt:
             self.pwmTILT.stop()
 
     def startPAN(self):
-            self.pwmPAN.start(7.5)
+        self.pwmPAN.start(self.nowAnglePAN)
+
 
     def startTILT(self):
-            self.pwmTILT.start(7.5)
-
-    #except KeyboardInterrupt:
-    #    self.pwmPAN.stop()
-    #    GPIO.cleanup()
+        self.pwmTILT.start(self.nowAngleTILT)
 

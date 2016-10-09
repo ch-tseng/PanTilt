@@ -11,8 +11,8 @@ from libCH.pantilt import PanTilt
 
 GPIO.setmode(GPIO.BOARD)
 
-imgsize_w = int(640*0.6)
-imgsize_h = int(480*0.6)
+imgsize_w = int(640*0.5)
+imgsize_h = int(480*0.5)
 moveDegree = 0.25
 
 
@@ -33,8 +33,8 @@ GPIO.setup(pinPIR ,GPIO.IN)
 #_[PAN/TILT_SERVO_CONFIGURATION]_______________________________
 motorPT = PanTilt(12,11)
 # move to center (90 degrees)
-motorPT.movePANto(7.5)
-motorPT.moveTILTto(7.5)
+#motorPT.movePANto(7.5)
+#motorPT.moveTILTto(7.5)
 
 
 # initialize the video stream and allow the cammera sensor to warmup
@@ -64,17 +64,17 @@ def movePANTILT(diffX, diffY):
     lengthY4 = (imgsize_h/2) * 0.9
 
 
-    if abs(diffX)<lengthX1: adjustDegreeX = moveDegree/2
-    if abs(diffX)<lengthX2 and abs(diffX)>=lengthX1: adjustDegreeX = moveDegree/1.5
+    if abs(diffX)<lengthX1: adjustDegreeX = moveDegree/3
+    if abs(diffX)<lengthX2 and abs(diffX)>=lengthX1: adjustDegreeX = moveDegree/2
     if abs(diffX)<lengthX3 and abs(diffX)>=lengthX2: adjustDegreeX = moveDegree
-    if abs(diffX)<lengthX4 and abs(diffX)>=lengthX3: adjustDegreeX = moveDegree*2.0
-    if abs(diffX)>=lengthX4: adjustDegreeX = moveDegree*2.5
+    if abs(diffX)<lengthX4 and abs(diffX)>=lengthX3: adjustDegreeX = moveDegree*2
+    if abs(diffX)>=lengthX4: adjustDegreeX = moveDegree*3.0
 
     if abs(diffY)<lengthY1: adjustDegreeY = moveDegree/2
     if abs(diffY)<lengthY2 and abs(diffY)>=lengthY1: adjustDegreeY = moveDegree/1.5
     if abs(diffY)<lengthY3 and abs(diffY)>=lengthY2: adjustDegreeY = moveDegree
-    if abs(diffY)<lengthY4 and abs(diffY)>=lengthY3: adjustDegreeY = moveDegree*2.0
-    if abs(diffY)>=lengthY4: adjustDegreeY = moveDegree*2.5
+    if abs(diffY)<lengthY4 and abs(diffY)>=lengthY3: adjustDegreeY = moveDegree*1.5
+    if abs(diffY)>=lengthY4: adjustDegreeY = moveDegree*2.0
 
     if diffX<0:
         motorPT.movePAN(-adjustDegreeX)
@@ -111,7 +111,7 @@ def checkFace():
             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),1)
             iface += 1
 
-    print str(i) + ") Found "+str(facesNow)+" face(s)"
+    print ("Found "+str(facesNow)+" face(s)")
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
@@ -136,23 +136,46 @@ def checkFace():
 
 GPIO.add_event_detect(pinPIR, GPIO.RISING, callback=MOTION)
 
-i=0
+iX=0
+iY=0
 statusPIR = 0
 facesNow = 1
 
 # loop over the frames from the video stream
 while True:
+    
+    if statusPIR == 1:
+        #motorPT.start()
 
-    for routinY in xrange(50,100,10):
+        for routinY in xrange(50,100,10):
 
-        motorPT.moveTILTto(routinY/10.0)
-        for routinX in xrange(25, 125, 5):
+            if iY%2 > 0:
+                routinY = 100 - routinY
 
-            facesNow = 1
-            print (str(routinX/10.0) + "/" + str(routinY/10.0))
-            motorPT.movePANto(routinX/10.0)
+            motorPT.moveTILTto(routinY/10.0)
+            for routinX in xrange(25, 125, 5):
+          
+                facesNow = 1
+                if iX%2 > 0:
+                    routinX = 125 - routinX
 
-            #time.sleep(0.5)
-            print ("FacesNow = " + str(facesNow))
-            while facesNow>0:
-                checkFace()
+                print("routinX = " + str(routinX))
+                print (str(routinX/10.0) + "/" + str(routinY/10.0))
+                motorPT.movePANto(routinX/10.0)
+
+                #time.sleep(0.5)
+                print ("FacesNow = " + str(facesNow))
+                while facesNow>0:
+                    checkFace()
+
+            iX += 1
+            statusPIR = 0
+
+        iY += 1
+
+    else:
+        print("No body here, sleep...")
+        iX = 0
+        iY = 0
+        facesNow = 1
+        #motorPT.stop()
