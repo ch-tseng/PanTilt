@@ -32,9 +32,6 @@ GPIO.setup(pinPIR ,GPIO.IN)
 
 #_[PAN/TILT_SERVO_CONFIGURATION]_______________________________
 motorPT = PanTilt(12,11)
-# move to center (90 degrees)
-#motorPT.movePANto(7.5)
-#motorPT.moveTILTto(7.5)
 
 
 # initialize the video stream and allow the cammera sensor to warmup
@@ -42,13 +39,10 @@ vs = VideoStream(usePiCamera=1).start()
 time.sleep(2.0)
 
 #_INTERRUPTS_FOR_PIR___________________________________________
-def MOTION(pinPIR):
-    global statusPIR
-    print("PIR detected!")
-    #searchAround()
-    #motorPT.startPAN()
-    #motorPT.startTILT()
-    statusPIR = 1
+#def MOTION(pinPIR):
+#    global statusPIR
+#    print("PIR detected!")
+#    statusPIR = 1
 
 def movePANTILT(diffX, diffY):
     global moveDegree, imgsize_w, imgsize_h
@@ -113,7 +107,7 @@ def checkFace():
 
     print ("Found "+str(facesNow)+" face(s)")
 
-    cv2.imshow("Frame", frame)
+    #cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
     if(facesNow>0):
@@ -134,7 +128,7 @@ def checkFace():
 
 
 
-GPIO.add_event_detect(pinPIR, GPIO.RISING, callback=MOTION)
+#GPIO.add_event_detect(pinPIR, GPIO.RISING, callback=MOTION)
 
 iX=0
 iY=0
@@ -143,9 +137,13 @@ facesNow = 1
 
 # loop over the frames from the video stream
 while True:
-    
+    statusPIR = GPIO.input(pinPIR)   
+
     if statusPIR == 1:
-        #motorPT.start()
+        if motorPT.inaction==0: 
+            #vs = VideoStream(usePiCamera=1).start()
+            #time.sleep(2.0)
+            motorPT.start()
 
         for routinY in xrange(50,100,10):
 
@@ -178,4 +176,6 @@ while True:
         iX = 0
         iY = 0
         facesNow = 1
-        #motorPT.stop()
+        if motorPT.inaction==1: 
+            #vs = VideoStream().stop()
+            motorPT.stop()
