@@ -11,8 +11,8 @@ from libCH.pantilt import PanTilt
 
 GPIO.setmode(GPIO.BOARD)
 
-imgsize_w = int(640*0.4)
-imgsize_h = int(480*0.4)
+imgsize_w = int(640*0.6)
+imgsize_h = int(480*0.6)
 moveDegree = 0.25
 
 
@@ -90,68 +90,69 @@ def movePANTILT(diffX, diffY):
         motorPT.moveTILT(-adjustDegreeY)
         print("Move Y --> " + str(-adjustDegreeY))
 
+def checkFace():
+    global imgsize_w, imgsize_h, facesNow, cv2
+
+    print("Check Faces")
+    frame = vs.read()
+    frame = imutils.resize(frame, width=imgsize_w)
+    frame = imutils.rotate(frame, 180)
+
+    face_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml')
+    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 5)
+    facesNow = len(faces)
+
+    iface = 0
+    for (x,y,w,h) in faces:
+        if iface == 0:
+            cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
+        else:
+            cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),1)
+            iface += 1
+
+    print str(i) + ") Found "+str(facesNow)+" face(s)"
+
+    cv2.imshow("Frame", frame)
+    key = cv2.waitKey(1) & 0xFF
+
+    if(facesNow>0):
+
+        GPIO.output(pinLED, GPIO.HIGH)
+        xFace = faces[0][0]
+        yFace = faces[0][1]
+
+        #print "x,y = " + str(xFace) + "," + str(yFace)
+        diffX = (imgsize_w/2) - x
+        diffY = (imgsize_h/2) - y
+        print "diffX, diffY = " + str(diffX) + "," + str(diffY)
+        movePANTILT(diffX, diffY)
+
+    else:
+        GPIO.output(pinLED, GPIO.LOW)
+        facesNow = 0
+
 
 
 GPIO.add_event_detect(pinPIR, GPIO.RISING, callback=MOTION)
 
 i=0
 statusPIR = 0
-
+facesNow = 1
 
 # loop over the frames from the video stream
 while True:
-        i+=1
-	# grab the frame from the threaded video stream and resize it
-	# to have a maximum width of 400 pixels
-	frame = vs.read()
-	frame = imutils.resize(frame, width=imgsize_w)
-        frame = imutils.rotate(frame, 180)
-	# draw the timestamp on the frame
-	#timestamp = datetime.datetime.now()
-	#ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-	#cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
-	#	0.35, (0, 0, 255), 1)
-        face_cascade = cv2.CascadeClassifier('/usr/share/opencv/haarcascades/haarcascade_frontalface_alt.xml')
-        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1, 5)
 
-        iface = 0
-        for (x,y,w,h) in faces:
-            if iface == 0:
-                cv2.rectangle(frame,(x,y),(x+w,y+h),(0,0,255),2)
-            else:
-                cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),1)
-            iface += 1
+    for routinY in xrange(50,100,10):
 
-        print str(i) + ") Found "+str(len(faces))+" face(s)"
+        motorPT.moveTILTto(routinY/10.0)
+        for routinX in xrange(25, 125, 5):
 
+            facesNow = 1
+            print (str(routinX/10.0) + "/" + str(routinY/10.0))
+            motorPT.movePANto(routinX/10.0)
 
-	# show the frame
-	cv2.imshow("Frame", frame)
-	key = cv2.waitKey(1) & 0xFF
-
-        if(len(faces)>0):
-            GPIO.output(pinLED, GPIO.HIGH)
-            xFace = faces[0][0]
-            yFace = faces[0][1]
-
-            #print "x,y = " + str(xFace) + "," + str(yFace)
-            diffX = (imgsize_w/2) - x
-            diffY = (imgsize_h/2) - y
-            print "diffX, diffY = " + str(diffX) + "," + str(diffY)
-            movePANTILT(diffX, diffY)
-
-        else:
-            GPIO.output(pinLED, GPIO.LOW)
-
-        statusPIR = GPIO.input(pinPIR)
-        print("PIR="+str(statusPIR))
-
-
-	# if the `q` key was pressed, break from the loop
-	if key == ord("q"):
-		break
-
-# do a bit of cleanup
-cv2.destroyAllWindows()
-vs.stop()
+            #time.sleep(0.5)
+            print ("FacesNow = " + str(facesNow))
+            while facesNow>0:
+                checkFace()
