@@ -141,7 +141,7 @@ while True:
         if motorPT.inaction==0: 
             motorPT.start()
 
-        for routinY in xrange(45,120,25): # Degrees for camera Y bar, you can change this.
+        for routinY in xrange(55,120,15): # Degrees for camera Y bar, you can change this.
 
             if iY%2 > 0:
                 routinY = 50 - routinY  # Y bar = 45, 70, 95  , so, 95-45 = 50
@@ -150,7 +150,7 @@ while True:
 
             for routinX in xrange(25, 125, 5):  # X bar for camera is : 25,30,35.....,120
           
-                if iX%2 > 0:   #this will let the PAN move reverse, don´t need to move 180 degree to start.
+                if iX%2 > 0:   # this will let the PAN move reverse, do not need to move 180 degree to start.
                     routinX = 125 - routinX # 12.5 is 180 degree
 
                 motorPT.movePANto(routinX/10.0)
