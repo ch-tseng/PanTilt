@@ -1,7 +1,6 @@
 # import the necessary packages
 from imutils.video import VideoStream
 import datetime
-import argparse
 import imutils
 import time
 import cv2
@@ -11,16 +10,9 @@ from libCH.pantilt import PanTilt
 
 GPIO.setmode(GPIO.BOARD)
 
-imgsize_w = int(640*0.5)
-imgsize_h = int(480*0.5)
+imgsize_w = int(640*0.4)
+imgsize_h = int(480*0.4)
 moveDegree = 0.25
-
-
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--picamera", type=int, default=-1,
-	help="whether or not the Raspberry Pi camera should be used")
-args = vars(ap.parse_args())
 
 #_[LED_CONFIGURATION]__________________________________________
 pinLED = 36
@@ -44,18 +36,24 @@ time.sleep(2.0)
 #    print("PIR detected!")
 #    statusPIR = 1
 
-def movePANTILT(diffX, diffY):
+def movePANTILT(diffX, diffY, yDegreeNow):  # yDegreeNow is for adjustment only.
     global moveDegree, imgsize_w, imgsize_h
-    adjustDegreeX = moveDegree
-    adjustDegreeY = moveDegree
+
+    if yDegreeNow<=80 and yDegreeNow>=70:
+        adjustDegreeX = moveDegree
+        adjustDegreeY = moveDegree
+    else:
+        adjustDegreeX = moveDegree/2
+        adjustDegreeY = moveDegree/2
+
     lengthX1 = (imgsize_w/2) * 0.2
     lengthY1 = (imgsize_h/2) * 0.2
-    lengthX2 = (imgsize_w/2) * 0.6
-    lengthY2 = (imgsize_h/2) * 0.6
-    lengthX3 = (imgsize_w/2) * 0.8
-    lengthY3 = (imgsize_h/2) * 0.8
-    lengthX4 = (imgsize_w/2) * 0.9
-    lengthY4 = (imgsize_h/2) * 0.9
+    lengthX2 = (imgsize_w/2) * 0.4
+    lengthY2 = (imgsize_h/2) * 0.4
+    lengthX3 = (imgsize_w/2) * 0.5
+    lengthY3 = (imgsize_h/2) * 0.5
+    lengthX4 = (imgsize_w/2) * 0.7
+    lengthY4 = (imgsize_h/2) * 0.7
 
 
     if abs(diffX)<lengthX1: adjustDegreeX = moveDegree/3
@@ -84,10 +82,10 @@ def movePANTILT(diffX, diffY):
         motorPT.moveTILT(-adjustDegreeY)
         print("Move Y --> " + str(-adjustDegreeY))
 
-def checkFace():
+def checkFace(yDegreeNow):
     global imgsize_w, imgsize_h, facesNow, cv2
 
-    print("Check Faces")
+    #print("Check Faces")
     frame = vs.read()
     frame = imutils.resize(frame, width=imgsize_w)
     frame = imutils.rotate(frame, 180)
@@ -105,7 +103,7 @@ def checkFace():
             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),1)
             iface += 1
 
-    print ("Found "+str(facesNow)+" face(s)")
+    #print ("Found "+str(facesNow)+" face(s)")
 
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
@@ -117,10 +115,10 @@ def checkFace():
         yFace = faces[0][1]
 
         #print "x,y = " + str(xFace) + "," + str(yFace)
-        diffX = (imgsize_w/2) - x
-        diffY = (imgsize_h/2) - y
+        diffX = (imgsize_w/2) - x - (w/2)
+        diffY = (imgsize_h/2) - y - (h/2)
         print "diffX, diffY = " + str(diffX) + "," + str(diffY)
-        movePANTILT(diffX, diffY)
+        movePANTILT(diffX, diffY, yDegreeNow)
 
     else:
         GPIO.output(pinLED, GPIO.LOW)
@@ -141,30 +139,25 @@ while True:
 
     if statusPIR == 1:
         if motorPT.inaction==0: 
-            #vs = VideoStream(usePiCamera=1).start()
-            #time.sleep(2.0)
             motorPT.start()
 
-        for routinY in xrange(50,100,10):
+        for routinY in xrange(45,120,25): # Degrees for camera Y bar, you can change this.
 
             if iY%2 > 0:
-                routinY = 100 - routinY
+                routinY = 50 - routinY  # Y bar = 45, 70, 95  , so, 95-45 = 50
 
-            motorPT.moveTILTto(routinY/10.0)
-            for routinX in xrange(25, 125, 5):
+            motorPT.moveTILTto(routinY/10.0)   # Move Tilt to the degree
+
+            for routinX in xrange(25, 125, 5):  # X bar for camera is : 25,30,35.....,120
           
-                facesNow = 1
-                if iX%2 > 0:
-                    routinX = 125 - routinX
+                if iX%2 > 0:   #this will let the PAN move reverse, don´t need to move 180 degree to start.
+                    routinX = 125 - routinX # 12.5 is 180 degree
 
-                print("routinX = " + str(routinX))
-                print (str(routinX/10.0) + "/" + str(routinY/10.0))
                 motorPT.movePANto(routinX/10.0)
 
-                #time.sleep(0.5)
-                print ("FacesNow = " + str(facesNow))
-                while facesNow>0:
-                    checkFace()
+                facesNow = 1
+                while facesNow>0:  # check and track the face until lost it.
+                    checkFace(routinY)
 
             iX += 1
             statusPIR = 0
@@ -172,10 +165,9 @@ while True:
         iY += 1
 
     else:
-        print("No body here, sleep...")
+        #print("No body here, sleep...")
         iX = 0
         iY = 0
         facesNow = 1
         if motorPT.inaction==1: 
-            #vs = VideoStream().stop()
             motorPT.stop()
